@@ -45,6 +45,15 @@ pipeline {
                 sh 'mvn -B clean package'
             }
         }
+        stage('Build DownStream Jobs') {
+            when {
+                expression {params.build_downstream.toBoolean() == true}   
+            }
+            steps {
+                echo 'Build DownStream Jobs'
+                build job: "test", waut: true
+            }
+        }
     }
     post {
         failure {

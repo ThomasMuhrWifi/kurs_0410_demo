@@ -39,6 +39,12 @@ pipeline {
                 sh 'mvn -B -DskipTests clean package'
             }
         }
+        stage('junittest') {
+            steps {
+                echo 'This is the test step'
+                sh 'mvn test'
+            }
+        }
     }
     post {
         failure {

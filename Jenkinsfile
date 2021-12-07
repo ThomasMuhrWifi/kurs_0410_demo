@@ -42,7 +42,7 @@ pipeline {
         stage('junittest') {
             steps {
                 echo 'This is the test step'
-                sh 'mvn test'
+                sh 'mvn -B clean package'
             }
         }
     }

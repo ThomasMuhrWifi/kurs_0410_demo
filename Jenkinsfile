@@ -18,8 +18,8 @@ pipeline {
     }
 
     tools {
-        maven 'maven_3.8.x'
-        jdk 'jdk_1.8.x'
+        maven 'maven_3.8.x'  // 'maven_3.6.3'
+        jdk 'jdk_1.8.x'    // 'jdk_1.8.0'
     }
 
     stages {
@@ -39,21 +39,40 @@ pipeline {
                 sh 'mvn -B -DskipTests clean package'
             }
         }
-        stage('junittest') {
+        stage('Build and Unit Test') {
             steps {
-                echo 'This is the test step'
-                sh 'mvn -B clean package'
+                echo "Build and Unit Test"
+                sh "mvn -B -nsu clean install"
+            }
+            post {
+                always {
+                  script {
+                       try{
+                            junit "**/failsafe-reports/*.xml"
+                        }catch(Exception e) {
+                            echo 'failsafe-reports not found'
+                        }
+                    }
+                }
             }
         }
-        stage('Build DownStream Jobs') {
+        stage('Build Downstream Jobs') {
             when {
-                expression {params.build_downstream.toBoolean() == true}   
+                expression { params.build_downstream.toBoolean() == true}
             }
             steps {
-                echo 'Build DownStream Jobs'
-                build job: "test", waut: true
+                echo "build downstream jobs"
+                build job: "test", wait: true
             }
         }
+        stage('Deploy to Nexus') {
+            steps {
+                // -Plocal-deploy
+            	echo "Deploy to Nexus"
+                sh 'mvn -B -N wagon:upload -Dproject.nexus.wagon-upload-serverId=\\${project.nexus.snapshot-serverId} -Dproject.nexus.wagon-upload-url=\\${project.nexus.snapshot-repository}'
+            }
+        }        
+        
     }
     post {
         failure {
